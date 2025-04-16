@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   LineChart,
   Line,
@@ -83,48 +83,59 @@ const CustomTooltip = ({ active, payload, yourPercentile }) => {
   }
   return null;
 };
-
 const ComparisonGraph = ({ yourPercentile }) => {
   const [data, setData] = useState(myData);
+  const prevPercentileRef = useRef(null);
 
   useEffect(() => {
-    // Always start fresh from the original data
-    const freshData = [...myData];
+    const updatedPercentile = Number(yourPercentile); // 🔑 force it to number
+    const freshData = [...data];
 
-    const index = freshData.findIndex(
-      (item) => item.percentile === yourPercentile
-    );
-
-    if (index === -1) {
-      freshData.push({ percentile: yourPercentile, count: 1 });
-    } else {
-      freshData[index] = {
-        ...freshData[index],
-        count: freshData[index].count + 1,
-      };
+    // Step 1: Decrement from previous
+    if (prevPercentileRef.current !== null) {
+      const prevIndex = freshData.findIndex(
+        (item) => item.percentile === prevPercentileRef.current
+      );
+      if (prevIndex !== -1) {
+        freshData[prevIndex].count -= 1;
+        if (freshData[prevIndex].count <= 0) {
+          freshData.splice(prevIndex, 1);
+        }
+      }
     }
 
+    // Step 2: Increment or insert new
+    const currentIndex = freshData.findIndex(
+      (item) => item.percentile === updatedPercentile
+    );
+    if (currentIndex !== -1) {
+      freshData[currentIndex].count += 1;
+    } else {
+      freshData.push({ percentile: updatedPercentile, count: 1 });
+    }
+
+    prevPercentileRef.current = updatedPercentile;
     setData(freshData);
   }, [yourPercentile]);
 
   return (
     <div style={{ width: "100%", height: 300 }}>
       <ResponsiveContainer>
-        <LineChart data={data}>
+        <LineChart data={data.sort((a, b) => a.percentile - b.percentile)}>
           <CartesianGrid stroke="#eee" strokeDasharray="3 3" />
           <XAxis dataKey="percentile" />
           <YAxis hide />
           <Tooltip
-            content={<CustomTooltip yourPercentile={yourPercentile} />}
+            content={<CustomTooltip yourPercentile={Number(yourPercentile)} />}
           />
           <Line
             type="monotone"
             dataKey="count"
             stroke="#8884d8"
-            dot={<CustomDot yourPercentile={yourPercentile} />}
+            dot={<CustomDot yourPercentile={Number(yourPercentile)} />}
           />
           <ReferenceLine
-            x={yourPercentile}
+            x={Number(yourPercentile)}
             stroke="blue"
             strokeDasharray="3 3"
             label={{
@@ -139,5 +150,4 @@ const ComparisonGraph = ({ yourPercentile }) => {
     </div>
   );
 };
-
 export default ComparisonGraph;

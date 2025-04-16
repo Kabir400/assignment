@@ -9,6 +9,7 @@ import LineChart from "./components/LineChart";
 import Popup from "./components/Popup";
 import PieChartComp from "./components/PieChart";
 
+
 function page() {
   const [data, setData] = React.useState({
     rank: 1,

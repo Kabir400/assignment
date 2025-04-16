@@ -18,9 +18,6 @@ function PieChartComp({ score }) {
   // Colors for the pie segments
   const COLORS = ["#3A7DF4", "#EAF2FE"];
 
-  // Calculate percentage for display
-  const percentage = Math.round((validScore / 15) * 100);
-
   return (
     <div>
       <div className="border-2 w-full p-5 rounded-lg mt-6">
